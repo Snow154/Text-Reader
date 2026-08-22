@@ -15,7 +15,7 @@ Thanks to line virtualization and the rendering of only a limited number of line
 
 <p align="center">
   <img
-    src="resources/text-reader-screenshot.png"
+    src="TextReader/resources/text-reader-screenshot.png"
     alt="Text Reader application"
     width="800"
   >
