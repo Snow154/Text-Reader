@@ -1,29 +1,61 @@
 # Text Reader App
 
-Aplikacia Text Reader je aplikacia, ktora dokaze citat vacsie textove subory. Pouzil som na jej tvorbu WPF (taktiez podmienkou by mal byt nainstalovany .NET 8 Desktop Runtime), kde aplikacia vyuziva len jedno MainWindow okno. Pomocou tlacidiel Load File, Random a Load URL dokaze nacitat dane data z vasho pozadovaneho zdroja. Aplikaciu som testoval s rozne velkymi textovymi subormi. V aplikacii mozme len subory citat. Hlavny core funkcnosti aplikacie je jeho vizualizacia a indexovanie. 
+Text Reader is an application designed to read large text files. It was built using WPF and requires the .NET 8 Desktop Runtime. The application uses a single `MainWindow`. The **Load File**, **Random**, and **Load URL** buttons allow users to load data from their preferred source.
 
-Pri nacitani noveho suboru z lokalneho disku sa subor otvori len v preview mode kedy vidime zaciatok suboru ale zvysok suboru sa indexuje na pozadi. Po dokonceni indexovania je mozne celym suborom scrollovat. Na vykreslenie textu a scrollovanie vyuzivam Text Block, no TextBlock neobsahuje cely nacitany subor ale len vizualizuje isty pocet riadkov a pocas scrollovania sa zvysny text nacita. 
+The application has been tested with text files of various sizes. Files can only be viewed, not edited. The core functionality of the application focuses on text visualization and file indexing.
 
-Vyuzitie TextBlocku je kvoli tomu ze vdaka line virtualizacii a zobrazovani len isteho poctu riadkov, je po testovani aj s 10GB textovym suborom plynule. Cize nerenderuje plne cely text file naraz ale virtualizuje postupne istu cast textu.  
+When a new file is loaded from the local disk, it is initially opened in preview mode. The beginning of the file is displayed immediately, while the rest of the file is indexed in the background. Once the indexing process is complete, users can scroll through the entire file.
 
-Aplikacia nacita tieto typy lokalnych suborov :
+A `TextBlock` is used to display and scroll through the text. However, the `TextBlock` does not contain the entire loaded file. It displays only a limited number of lines, while additional content is loaded as the user scrolls.
 
-*.txt, *.log, *.csv, *.json, *.xml, *.html a All files (\*.\*)
+Thanks to line virtualization and the rendering of only a limited number of lines at a time, the application remains responsive even when working with very large files. It has been successfully tested with a 10 GB text file. Instead of rendering the entire text file at once, the application gradually virtualizes and displays only the required portion of the text.
 
-URL funkcionalita pracuje stiahnutim si html textu zo zadaneho linku a nasledne jeho ulozenim v temp subore ktory sa pri zavreti aplikacie vymaze.
 
-Generate Random vytvori random sekvenciu pismen, slov a nahodny pocet riadkov. Moze ich byt od 500 tisic po 1 milion. 
+## Screenshot
 
-Stlacenim CTRL + F sa objavi vyhladavaci textbox, ktore mozeme ovladat aj tlacidlami next/previous ale taktiez aj klavesami ako boli opisane v zadani. 
+<p align="center">
+  <img
+    src="resources/text-reader-screenshot.png"
+    alt="Text Reader application"
+    width="800"
+  >
+</p>
 
-### Pred pouzitim 
-Je potrebne mat nainstalovany .NET 8 Desktop Runtime.
+## Supported File Types
 
-## Struktura projektu
+The application supports the following local file types:
 
-- **MainWindow.xaml** obsahuje GUI funkcionalitu hlavneho okna - vizual a taktiez eventy danych UI elementov. 
-- **MVVM/ViewModel/MainViewModel.cs** - obsahuje hlavnu funkcionalitu - Ovladanie jednotlivych funkcionalit tlacidiel, nacitanie dat (generovanie random textu, ziskanie textu z URL, nacitanie lokalneho suboru)
-- **MVVM/Utility/RelayCommand.cs** - Utility class, na funkcionalitu buttonov v GUI
-- **MVVM/Services/FileIndexer.cs** - Service, ktory ma hlavnu ulohu indexovat subor pri jeho nacitani, vytvori jednotlive indexy na zaklade citania suboru po bytoch(1 MB)
-- **MVVM/Services/TextProvider.cs** - Service, ktory ziskava jednotlive riadky zo suboru na zaklade indexov vytvorenych vo FileIndexer.cs
-- **MVVM/Model/*** - obsahuje jednotlive datove struktury vyuzite v aplikacii
+- `.txt`
+- `.log`
+- `.csv`
+- `.json`
+- `.xml`
+- `.html`
+- All files (`*.*`)
+
+## Features
+
+### Loading Content from a URL
+
+The URL feature downloads the HTML content from the specified link and stores it in a temporary file. The temporary file is deleted when the application is closed.
+
+### Random Text Generation
+
+The **Generate Random** feature creates a random sequence of letters and words with a randomly selected number of lines. The generated text can contain between 500,000 and 1,000,000 lines.
+
+### Search
+
+Pressing `Ctrl + F` opens a search box. Search results can be navigated using the **Next** and **Previous** buttons, as well as the keyboard shortcuts described in the assignment.
+
+## Requirements
+
+- .NET 8 Desktop Runtime
+
+## Project Structure
+
+- **`MainWindow.xaml`** — Contains the graphical user interface of the main window, including its visual elements and UI events.
+- **`MVVM/ViewModel/MainViewModel.cs`** — Contains the main application logic, including button commands, random text generation, URL content retrieval, and local file loading.
+- **`MVVM/Utility/RelayCommand.cs`** — A utility class used to implement commands for the GUI buttons.
+- **`MVVM/Services/FileIndexer.cs`** — Responsible for indexing files when they are loaded. It creates individual indexes by reading the file in 1 MB chunks.
+- **`MVVM/Services/TextProvider.cs`** — Retrieves individual lines from the file using the indexes created by `FileIndexer.cs`.
+- **`MVVM/Model/`** — Contains the data structures used by the application.
