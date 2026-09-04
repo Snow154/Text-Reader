@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
+using TextReader.MVVM.Utility;
 using TextReader.ViewModel.Model;
 using TextReader.ViewModel.Services;
 using TextReader.ViewModel.Utility;
@@ -14,14 +15,14 @@ namespace TextReader.ViewModel.ViewModel
     {
 
         #region Variables
-        private RelayCommand? _openFileCommand;
-        private RelayCommand? _openUrlCommand;
-        private RelayCommand? _generateRandomCommand;
-        private RelayCommand? _saveAsCommand;
+        private AsyncRelayCommand? _openFileCommand;
+        private AsyncRelayCommand? _openUrlCommand;
+        private AsyncRelayCommand? _generateRandomCommand;
+        private AsyncRelayCommand? _saveAsCommand;
         private TextProvider? _textProvider;
-        private RelayCommand? _searchCommand;
-        private RelayCommand? _findNextCommand;
-        private RelayCommand? _findPreviousCommand;
+        private AsyncRelayCommand? _searchCommand;
+        private AsyncRelayCommand? _findNextCommand;
+        private AsyncRelayCommand? _findPreviousCommand;
 
         private readonly List<string> _tempFiles = new();
 
@@ -97,9 +98,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _openFileCommand ??=
-                    new RelayCommand(
-                        _ => OpenFile(),
-                        _ => !IsBusy);
+                    new AsyncRelayCommand(
+                        OpenFileAsync,
+                        () => !IsBusy);
             }
         }
 
@@ -118,9 +119,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _openUrlCommand ??=
-                    new RelayCommand(
-                        _ => OpenUrl(),
-                        _ => !IsBusy);
+                    new AsyncRelayCommand(
+                        OpenUrlAsync,
+                        () => !IsBusy);
             }
         }
 
@@ -129,9 +130,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _generateRandomCommand ??=
-                    new RelayCommand(
-                        _ => GenerateRandom(),
-                        _ => !IsBusy);
+                    new AsyncRelayCommand(
+                        GenerateRandomAsync,
+                        () => !IsBusy);
             }
         }
 
@@ -140,9 +141,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _saveAsCommand ??=
-                    new RelayCommand(
-                        _ => SaveAs(),
-                        _ => !IsBusy && _currentFilePath != null);
+                    new AsyncRelayCommand(
+                        SaveAsAsync,
+                        () => !IsBusy && _currentFilePath != null);
 
 
             }
@@ -183,9 +184,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _searchCommand ??=
-                    new RelayCommand(
-                        _ => Search(),
-                        _ => CanSearch());
+                    new AsyncRelayCommand(
+                        FindNextAsync,
+                        () => CanSearch());
             }
         }
 
@@ -194,9 +195,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _findNextCommand ??=
-                    new RelayCommand(
-                        _ => FindNext(),
-                        _ => CanSearch());
+                    new AsyncRelayCommand(
+                        FindNextAsync,
+                        () => CanSearch());
             }
         }
 
@@ -205,9 +206,9 @@ namespace TextReader.ViewModel.ViewModel
             get
             {
                 return _findPreviousCommand ??=
-                    new RelayCommand(
-                        _ => FindPrevious(),
-                        _ => CanSearch());
+                    new AsyncRelayCommand(
+                        FindPreviousAsync,
+                        () => CanSearch());
             }
         }
 
@@ -323,27 +324,6 @@ namespace TextReader.ViewModel.ViewModel
             _ = LoadVisibleLinesAsync();
         }
 
-        #region ButtonFunctions
-        private async void OpenFile()
-        {
-            await OpenFileAsync();
-        }
-
-        private async void OpenUrl()
-        {
-            await OpenUrlAsync();
-        }
-
-        private async void GenerateRandom()
-        {
-            await GenerateRandomAsync();
-        }
-
-        private async void SaveAs()
-        {
-            await SaveAsAsync();
-        }
-        #endregion
 
         private async Task OpenFileAsync()
         {
