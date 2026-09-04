@@ -23,7 +23,7 @@ namespace TextReader.ViewModel.ViewModel
         private RelayCommand? _findNextCommand;
         private RelayCommand? _findPreviousCommand;
 
-        List<string> _tempFiles = new();
+        private readonly List<string> _tempFiles = new();
 
         private int VisibleLineCount = 1000;
         private int ViewportLineCount = 100;
@@ -640,6 +640,9 @@ namespace TextReader.ViewModel.ViewModel
 
         public async Task<SearchResult?> FindNextInRange(long start, long end) 
         {
+
+            if (_textProvider == null || !CanSearch()) return null;
+
             const int batchSize = 2000;
 
             long currentLine = start;
@@ -708,9 +711,13 @@ namespace TextReader.ViewModel.ViewModel
 
         private async Task<SearchResult?> FindPreviousInRangeAsync(long start,long end)
         {
+
+            if (_textProvider == null || !CanSearch()) return null;
             const int batchSize = 2000;
 
             long blockEnd = start;
+
+            
 
             while (blockEnd >= end)
             {

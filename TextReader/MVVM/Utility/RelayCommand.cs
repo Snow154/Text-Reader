@@ -4,24 +4,25 @@ namespace TextReader.ViewModel.Utility
 {
     internal class RelayCommand : ICommand
     {
-        private Action<object> execute;
-        private Func<object, bool> canExecute;
+        private readonly Action<object?> _execute;
+        private readonly Func<object?, bool>? _canExecute;
+        
         public event EventHandler? CanExecuteChanged;
 
-        public RelayCommand(Action<object> execute, Func<object, bool>? canExecute = null)
+        public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
         {
-            this.execute = execute;
-            this.canExecute = canExecute;
+            this._execute = execute;
+            this._canExecute = canExecute;
         }
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
-            return this.canExecute == null || this.canExecute(parameter);
+            return _canExecute?.Invoke(parameter) ?? true;
         }
 
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
-            this.execute(parameter);
+            this._execute(parameter);
         }
 
         public void RaiseCanExecuteChanged()

@@ -101,7 +101,7 @@
                            Width="{Binding ElementName=TextScrollViewer, Path=ActualWidth}"
                            FontFamily="Consolas"
                            FontSize="13"
-                           TextWrapping="Wrap"
+                           TextWrapping="NoWrap"
                            Padding="4"
                            />
             </ScrollViewer>
