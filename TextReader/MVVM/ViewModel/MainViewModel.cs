@@ -24,6 +24,9 @@ namespace TextReader.ViewModel.ViewModel
         private AsyncRelayCommand? _findNextCommand;
         private AsyncRelayCommand? _findPreviousCommand;
 
+        private CancellationTokenSource? _loadLinesCancellation;
+        private CancellationTokenSource? _indexCancellation;
+
         private readonly List<string> _tempFiles = new();
 
         private int VisibleLineCount = 1000;
@@ -375,6 +378,8 @@ namespace TextReader.ViewModel.ViewModel
 
         private async Task OpenTextSourceAsync(string filePath)
         {
+            _loadLinesCancellation?.Cancel();
+            _indexCancellation?.Cancel();
             IsIndexReady = false;
             IsBusy = true;
 
@@ -401,39 +406,82 @@ namespace TextReader.ViewModel.ViewModel
             if (_textProvider == null)
                 return;
 
+            _loadLinesCancellation?.Cancel();
+
+            var cancellation = new CancellationTokenSource();
+            _loadLinesCancellation = cancellation;
+
+            var provider = _textProvider;
+            long requestedStartLine = CurrentStartLine;
+
             try
             {
-                var lines = await _textProvider.GetLinesAsync(
-                    CurrentStartLine,
-                    VisibleLineCount);
+                var lines = await provider.GetLinesAsync(
+                    requestedStartLine,
+                    VisibleLineCount,
+                    cancellation.Token);
+
+                cancellation.Token.ThrowIfCancellationRequested();
+
+                if (!ReferenceEquals(_loadLinesCancellation, cancellation))
+                    return;
+
+                if (!ReferenceEquals(_textProvider, provider)) return;
 
                 DisplayText = string.Join(Environment.NewLine, lines);
+            }
+            catch (OperationCanceledException)
+                when (cancellation.IsCancellationRequested)
+            {
+
             }
             catch (Exception ex)
             {
                 StatusText = $"Loading lines failed: {ex.Message}";
             }
+            finally 
+            {
+                if(ReferenceEquals(_loadLinesCancellation, cancellation))
+                {
+                    _loadLinesCancellation = null;
+                }
+
+                cancellation.Dispose();
+            }
         }
 
         private async Task BuildIndexInBackgroundAsync(string filePath)
         {
+            _indexCancellation?.Cancel();
+
+            var cancellation = new CancellationTokenSource();
+            _indexCancellation = cancellation;
+
             try
             {
                 StatusText = "Indexing...";
 
                 FileIndexer fileIndexer = new();
+
                 FileIndex fileIndex = await fileIndexer.BuildIndexAsync(filePath, lines =>
                 {
+                    if (!ReferenceEquals(_indexCancellation, cancellation))
+                        return;
+
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        StatusText = $"Indexing... {lines:N0} lines";
+                        if(ReferenceEquals(_indexCancellation, cancellation))
+                            StatusText = $"Indexing... {lines:N0} lines";
                     });
-                });
 
-                if (_currentFilePath != filePath)
+                }, cancellation.Token);
+
+                cancellation.Token.ThrowIfCancellationRequested();
+
+                if (!ReferenceEquals(_indexCancellation, cancellation))
                     return;
 
-                if (_textProvider == null)
+                if (_currentFilePath != filePath || _textProvider == null)
                     return;
 
                 _textProvider.FileIndex = fileIndex;
@@ -444,6 +492,10 @@ namespace TextReader.ViewModel.ViewModel
                 StatusText = $"Ready: {TotalLines} lines";
                 await LoadVisibleLinesAsync();
             }
+            catch(OperationCanceledException) when (cancellation.IsCancellationRequested) 
+            {
+
+            }
             catch (Exception ex)
             {
                 IsIndexReady = false;
@@ -451,7 +503,13 @@ namespace TextReader.ViewModel.ViewModel
             }
             finally
             {
-                IsBusy = false;
+                if (ReferenceEquals(_indexCancellation, cancellation))
+                {
+                    _indexCancellation = null;
+                    IsBusy = false;
+                }
+
+                cancellation.Dispose();
             }
         }
 
@@ -564,21 +622,6 @@ namespace TextReader.ViewModel.ViewModel
             {
                 MessageBox.Show(e.Message);
             }
-        }
-
-        private async void Search() 
-        {
-            await FindNextAsync();
-        }
-
-        private async void FindNext()
-        {
-            await FindNextAsync();
-        }
-
-        private async void FindPrevious()
-        {
-            await FindPreviousAsync();
         }
 
         private bool CanSearch()
